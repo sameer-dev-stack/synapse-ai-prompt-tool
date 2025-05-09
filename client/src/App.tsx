@@ -292,7 +292,9 @@ function App() {
         type: msg.type, 
       }));
 
-      const response = await fetch('http://localhost:3001/api/generate-prompt', {
+      // Use the live Render backend URL
+      const apiUrl = 'https://synapse-ai-backend-il8z.onrender.com/api/generate-prompt';
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inputText: newUserMessage.text, history: historyForAPI }),
