@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // Ensure useState is imported
+import React from 'react'; // Removed unused useState import
 import { motion } from 'framer-motion';
 import type { PromptSessionData } from '../App'; // Import the interface
 
@@ -9,7 +9,7 @@ interface SidebarProps {
   authLoading: boolean;
   sessionList: PromptSessionData[];
   onLoadSession: (sessionId: string) => void;
-  onDeleteSession: (sessionId: string) => Promise<void>;
+  onDeleteSession: (sessionId: string) => Promise<void>; 
   currentSessionId: string | null;
 }
 
@@ -20,10 +20,10 @@ const Sidebar: React.FC<SidebarProps> = ({
   authLoading,
   sessionList,
   onLoadSession,
-  onDeleteSession,
+  onDeleteSession, 
   currentSessionId,
 }) => {
-  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // For a future custom confirm modal
+  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // This line was causing the error as it's unused
 
   const handleDeleteClick = (sessionId: string, sessionTitle: string) => {
     if (window.confirm(`Are you sure you want to delete session: "${sessionTitle || 'Untitled Session'}"?`)) {
@@ -79,7 +79,6 @@ const Sidebar: React.FC<SidebarProps> = ({
           ))}
         </div>
       </ul>
-      {/* This div will be pushed to the bottom because of mb-auto on the ul above and flex-column on parent */}
       <div className="pt-2 border-top border-secondary"> 
         <p className="small text-muted text-center mb-1">Developed by Sameer Imtiaz</p>
         <div className="dropdown">
