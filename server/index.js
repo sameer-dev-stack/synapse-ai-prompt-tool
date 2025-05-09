@@ -1,10 +1,12 @@
 require('dotenv').config(); // Load environment variables from .env file
+require('dotenv').config(); // Ensure dotenv is at the very top
 const express = require('express');
 const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const port = 3001;
+// Use port from environment variable for Render, default to 3001 for local
+const port = process.env.PORT || 3001; 
 
 // Initialize Google Generative AI
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
