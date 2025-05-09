@@ -123,7 +123,10 @@ const Sidebar: React.FC<SidebarProps> = ({
       </ul>
       <div className="pt-2 border-top border-secondary"> 
         <p className="small text-muted text-center mb-1">Developed by Sameer Imtiaz</p>
-        <div className="dropdown">
+        
+        {/* User Info and Logout Section */}
+        {/* Desktop: Dropdown */}
+        <div className="dropdown d-none d-md-block">
           <a href="#" className="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <strong className="text-truncate" style={{maxWidth: '180px'}}>{userEmail}</strong>
           </a>
@@ -134,6 +137,20 @@ const Sidebar: React.FC<SidebarProps> = ({
               </button>
             </li>
           </ul>
+        </div>
+
+        {/* Mobile: Direct Info and Logout Button */}
+        <div className="d-md-none mt-2">
+          <div className="text-white text-truncate mb-1 small" title={userEmail}>
+            {userEmail}
+          </div>
+          <button 
+            className="btn btn-sm btn-danger w-100" 
+            onClick={onLogout} 
+            disabled={authLoading}
+          >
+            {authLoading ? 'Logging out...' : 'Sign out'}
+          </button>
         </div>
       </div>
     </div>
