@@ -192,9 +192,23 @@ function App() {
   }
 
   return (
-    <div className="d-flex vh-100"> {/* Main flex container for sidebar and content */}
-      {/* Sidebar: Hidden on xs/sm, visible and static on md+ OR slides in on xs/sm if isSidebarOpen */}
-      <div className={`sidebar-container ${isSidebarOpen ? 'open' : ''} d-none d-md-flex`}>
+    <div className="d-flex vh-100 position-relative"> {/* Main flex container, added position-relative for hamburger */}
+      {/* Hamburger Menu Button (Visible only on small screens) */}
+      <button 
+        className="btn btn-dark d-md-none position-absolute top-0 start-0 m-2"
+        style={{zIndex: 1051}} // Ensure it's above sidebar if sidebar is also fixed/absolute
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label="Toggle sidebar"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-list" viewBox="0 0 16 16">
+          <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+      </button>
+
+      {/* Sidebar Wrapper: Handles mobile sliding via CSS and 'open' class */}
+      {/* On desktop, d-md-flex ensures it's visible and part of the layout. */}
+      {/* The Sidebar component itself is always rendered, its container controls visibility/layout. */}
+      <div className={`sidebar-container ${isSidebarOpen ? 'open' : ''} d-md-flex`}> 
         <Sidebar
           userEmail={session.user?.email || 'User'}
           onLogout={handleLogout}

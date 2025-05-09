@@ -58,15 +58,13 @@ const Sidebar: React.FC<SidebarProps> = ({
 
 
   return (
+    // The 'sidebar-container' class will be targeted by global CSS for mobile sliding
+    // d-md-flex makes it visible and flex on medium screens and up
+    // On smaller screens, its visibility is controlled by the 'open' class added by App.tsx
     <div
-      className={`${sidebarBaseClasses} ${desktopSidebarClasses} ${isSidebarOpen ? '' : 'd-none d-md-flex'}`} 
-      style={{ 
-        width: '280px', 
-        zIndex: 1045, 
-        transition: 'transform 0.3s ease-in-out', // Added transition directly
-        transform: isSidebarOpen || window.innerWidth >= 768 ? 'translateX(0)' : 'translateX(-100%)', // Control transform
-        position: window.innerWidth < 768 ? 'fixed' : 'static' // Conditional position
-      }}
+      className={`sidebar-actual ${sidebarBaseClasses} d-md-flex`} 
+      // The 'sidebar-container' class in App.tsx will handle the sliding for mobile
+      style={{ width: '280px', zIndex: 1045 }} 
     >
       <div className="d-flex justify-content-between align-items-center mb-3">
         <a href="/" className="d-flex align-items-center text-white text-decoration-none">
