@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment Variables - IMPORTANT!
+.env
+client/.env
+server/.env
+*.env.local
+*.env.*.local
+
+# Build artifacts
+client/dist/
+server/dist/ # If your server had a build step, not currently the case
+
+# IDE & OS specific
+.vscode/
+.idea/
+*.suo
+*.user
+*.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Coverage directory
+coverage/
