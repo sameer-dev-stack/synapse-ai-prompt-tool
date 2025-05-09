@@ -11,6 +11,8 @@ interface SidebarProps {
   onLoadSession: (sessionId: string) => void;
   onDeleteSession: (sessionId: string) => Promise<void>; 
   currentSessionId: string | null;
+  isSidebarOpen: boolean; // New prop
+  setIsSidebarOpen: (isOpen: boolean) => void; // New prop
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -20,10 +22,18 @@ const Sidebar: React.FC<SidebarProps> = ({
   authLoading,
   sessionList,
   onLoadSession,
-  onDeleteSession, 
+  onDeleteSession,
   currentSessionId,
+  isSidebarOpen,     // Destructure new prop
+  setIsSidebarOpen,  // Destructure new prop
 }) => {
-  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // This line was causing the error as it's unused
+  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // For a future custom confirm modal
+
+  const handleSidebarItemClick = () => {
+    if (window.innerWidth < 768) { // md breakpoint in Bootstrap
+      setIsSidebarOpen(false);
+    }
+  };
 
   const handleDeleteClick = (sessionId: string, sessionTitle: string) => {
     if (window.confirm(`Are you sure you want to delete session: "${sessionTitle || 'Untitled Session'}"?`)) {
@@ -32,15 +42,28 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   return (
-    <div className="d-flex flex-column flex-shrink-0 p-3 text-bg-dark" style={{ width: '280px' }}>
-      <a href="/" className="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
-        <span className="fs-5">Synapse</span>
-      </a>
+    // Add classes for mobile responsiveness: fixed position, full height, transform for sliding
+    <div 
+      className={`d-flex flex-column flex-shrink-0 p-3 text-bg-dark position-fixed position-md-static vh-100 ${isSidebarOpen ? 'start-0' : 'start-n100'}`} 
+      style={{ width: '280px', zIndex: 1040, transition: 'left 0.3s ease-in-out, transform 0.3s ease-in-out', left: isSidebarOpen ? '0' : '-280px' }}
+      // On medium screens and up (md), it will be static. On smaller, it's fixed and slides.
+    >
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <a href="/" className="d-flex align-items-center text-white text-decoration-none">
+          <span className="fs-5">Synapse</span>
+        </a>
+        <button className="btn btn-dark d-md-none" onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar">
+          {/* Close Icon (X) */}
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" className="bi bi-x-lg" viewBox="0 0 16 16">
+            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+          </svg>
+        </button>
+      </div>
       <hr />
       <ul className="nav nav-pills flex-column mb-auto">
         <li className="nav-item mb-1">
           <motion.button
-            onClick={onNewSession}
+            onClick={() => { onNewSession(); handleSidebarItemClick(); }}
             className="nav-link text-white w-100 text-start d-flex align-items-center"
             whileHover={{ scale: 1.03, backgroundColor: "rgba(255, 255, 255, 0.1)" }}
             whileTap={{ scale: 0.98 }}
@@ -58,7 +81,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           {sessionList.map((session) => (
             <li key={session.id} className="nav-item d-flex justify-content-between align-items-center">
               <button
-                onClick={() => onLoadSession(session.id)}
+                onClick={() => { onLoadSession(session.id); handleSidebarItemClick(); }}
                 className={`nav-link flex-grow-1 text-start text-truncate ${session.id === currentSessionId ? 'active text-dark fw-bold' : 'text-white'}`}
                 title={session.title}
                 style={{ marginRight: '0.5rem' }}

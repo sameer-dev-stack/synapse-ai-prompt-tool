@@ -88,10 +88,7 @@ function App() {
   const [promptLoading, setPromptLoading] = useState(false);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [sessionList, setSessionList] = useState<PromptSessionData[]>([]); 
-
-  useEffect(() => {
-    console.log("sessionList updated:", sessionList);
-  }, [sessionList]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State for sidebar toggle
 
   useEffect(() => {
     document.documentElement.setAttribute('data-bs-theme', 'dark');
@@ -182,11 +179,11 @@ function App() {
     setMessages([]);
     setPromptInput('');
     setCurrentSessionId(null); 
+    setIsSidebarOpen(false); // Close sidebar on new session (for mobile)
   }, []);
 
   const handleDeleteSession = useCallback(async (sessionIdToDelete: string) => {
     if (!session?.user) return;
-    console.log("[handleDeleteSession] Attempting to delete session ID:", sessionIdToDelete);
     const { error } = await supabase
       .from('prompt_sessions')
       .delete()
@@ -196,7 +193,6 @@ function App() {
     if (error) {
       console.error('Error deleting session:', error.message);
     } else {
-      console.log('Session deleted successfully:', sessionIdToDelete);
       setSessionList(prevList => prevList.filter(s => s.id !== sessionIdToDelete));
       if (currentSessionId === sessionIdToDelete) {
         setMessages([]);
@@ -206,49 +202,30 @@ function App() {
   }, [session, currentSessionId]);
 
   const handleLoadSession = useCallback((sessionIdToLoad: string) => {
-    console.log("[handleLoadSession] Attempting to load session ID:", sessionIdToLoad);
     const selectedSession = sessionList.find(s => s.id === sessionIdToLoad);
     if (selectedSession) {
-      console.log("[handleLoadSession] Found session data in list:", selectedSession);
-      const messagesToLoad = Array.isArray(selectedSession.messages) ? selectedSession.messages : [];
-      console.log("[handleLoadSession] Messages to load:", messagesToLoad);
-      setMessages(messagesToLoad);
+      setMessages(selectedSession.messages || []);
       setCurrentSessionId(selectedSession.id);
       setPromptInput('');
+      setIsSidebarOpen(false); // Close sidebar on session load (for mobile)
     } else {
-      console.error("[handleLoadSession] Session not found in list:", sessionIdToLoad);
+      console.error("Session not found in list:", sessionIdToLoad);
     }
   }, [sessionList]);
 
   const saveOrUpdateSession = async (sessionId: string | null, newMessages: AppMessage[], title?: string): Promise<string | null> => {
     if (!session?.user) return null;
-
     const sessionDataToSave: Omit<PromptSessionData, 'id' | 'created_at'> & { id?: string } = {
         user_id: session.user.id,
         messages: newMessages,
-        title: '', 
+        title: title || (newMessages[0]?.text?.substring(0,50)) || 'New Prompt',
     };
-    
-    const firstMessageText = newMessages[0]?.text;
-    sessionDataToSave.title = title || (firstMessageText ? firstMessageText.substring(0, 50) : 'New Prompt');
-
-
     if (sessionId) {
-      const { data, error } = await supabase
-        .from('prompt_sessions')
-        .update({ messages: newMessages })
-        .eq('id', sessionId)
-        .eq('user_id', session.user.id)
-        .select('id') 
-        .single();
+      const { data, error } = await supabase.from('prompt_sessions').update({ messages: newMessages }).eq('id', sessionId).eq('user_id', session.user.id).select('id').single();
       if (error) console.error('Error updating session:', error.message);
       return data ? data.id : null;
     } else {
-      const { data, error } = await supabase
-        .from('prompt_sessions')
-        .insert(sessionDataToSave)
-        .select('id') 
-        .single();
+      const { data, error } = await supabase.from('prompt_sessions').insert(sessionDataToSave).select('id').single();
       if (error) console.error('Error creating session:', error.message);
       else if (data) {
         setCurrentSessionId(data.id);
@@ -260,15 +237,12 @@ function App() {
 
   const handleSendMessage = useCallback(async (inputText: string) => {
     if (!inputText.trim() || !session?.user) return;
-
     const newUserMessage: AppMessage = { id: Date.now().toString() + '_user', text: inputText, type: 'userInput' };
     const currentLocalMessages = messages; 
     const updatedMessages = [...currentLocalMessages, newUserMessage];
     setMessages(updatedMessages);
-    
     setPromptLoading(true);
     setPromptInput('');
-
     let activeSessionId = currentSessionId;
     if (!activeSessionId) {
       const sessionTitle = inputText.substring(0, 50) || 'New Prompt';
@@ -285,34 +259,24 @@ function App() {
         setMessages(prev => [...prev, errMessage]);
         return;
     }
-    
     try {
-      const historyForAPI = updatedMessages.slice(0, -1).map(msg => ({
-        text: msg.text,
-        type: msg.type, 
-      }));
-
-      // Use the live Render backend URL
+      const historyForAPI = updatedMessages.slice(0, -1).map(msg => ({ text: msg.text, type: msg.type }));
       const apiUrl = 'https://synapse-ai-backend-il8z.onrender.com/api/generate-prompt';
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inputText: newUserMessage.text, history: historyForAPI }),
       });
-
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
-
       const data = await response.json();
       const newAiMessage: AppMessage = { id: Date.now().toString() + '_ai', text: data.prompt, type: 'aiPrompt' };
       const finalMessages = [...updatedMessages, newAiMessage];
       setMessages(finalMessages);
-      
       await saveOrUpdateSession(activeSessionId, finalMessages);
       triggerConfetti();
-
     } catch (err) {
       const message = err instanceof Error ? err.message : 'An unknown error occurred.';
       const newErrorMessage: AppMessage = { id: Date.now().toString() + '_error', text: `Oops! Something went wrong: ${message}`, type: 'error' };
@@ -338,7 +302,20 @@ function App() {
   }
 
   return (
-    <div className="d-flex vh-100">
+    <div className="d-flex vh-100 position-relative"> {/* Added position-relative for overlay */}
+      {/* Sidebar Toggle Button (Visible on small screens) */}
+      <button 
+        className="btn btn-dark d-md-none position-absolute top-0 start-0 m-2 z-index-master" // Bootstrap classes for positioning and visibility
+        style={{zIndex: 1050}} // Ensure it's above sidebar
+        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        aria-label="Toggle sidebar"
+      >
+        {/* Hamburger Icon */}
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" className="bi bi-list" viewBox="0 0 16 16">
+          <path fillRule="evenodd" d="M2.5 12a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h10a.5.5 0 0 1 0 1H3a.5.5 0 0 1-.5-.5z"/>
+        </svg>
+      </button>
+
       <Sidebar
         userEmail={session.user?.email || 'User'}
         onLogout={handleLogout}
@@ -348,10 +325,14 @@ function App() {
         onLoadSession={handleLoadSession}
         onDeleteSession={handleDeleteSession} 
         currentSessionId={currentSessionId}
+        isSidebarOpen={isSidebarOpen} // Pass state
+        setIsSidebarOpen={setIsSidebarOpen} // Pass setter
       />
       <div className="flex-grow-1 d-flex flex-column overflow-hidden">
         <header className="py-2 px-3 border-bottom d-flex justify-content-between align-items-center bg-dark text-light">
-          <h1 className="h5 mb-0">Synapse</h1> {/* Updated App Name */}
+          {/* Placeholder for menu button on small screens - or move app title to be conditional */}
+          <span className="d-md-none me-2"></span> {/* Spacer for hamburger button */}
+          <h1 className="h5 mb-0 text-center text-md-start flex-grow-1">Synapse</h1>
         </header>
         <ChatArea messages={messages} />
         <InputBar
