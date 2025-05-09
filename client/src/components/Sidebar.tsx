@@ -1,6 +1,6 @@
-import React from 'react';
+import React from 'react'; // Removed useState import
 import { motion } from 'framer-motion';
-import type { PromptSessionData } from '../App';
+import type { PromptSessionData } from '../App'; // Import the interface
 
 interface SidebarProps {
   userEmail: string;
@@ -9,7 +9,7 @@ interface SidebarProps {
   authLoading: boolean;
   sessionList: PromptSessionData[];
   onLoadSession: (sessionId: string) => void;
-  onDeleteSession: (sessionId: string) => Promise<void>;
+  onDeleteSession: (sessionId: string) => Promise<void>; 
   currentSessionId: string | null;
   isSidebarOpen: boolean;
   setIsSidebarOpen: (isOpen: boolean) => void;
@@ -27,6 +27,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isSidebarOpen,
   setIsSidebarOpen,
 }) => {
+  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // This line was causing the error as it's unused
+
   const handleSidebarItemClick = () => {
     if (window.innerWidth < 768) { // md breakpoint
       setIsSidebarOpen(false);
@@ -45,28 +47,32 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Base classes for sidebar
   const sidebarBaseClasses = "d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100";
   // Classes for mobile: fixed position, off-screen by default, slide in when open
-  const mobileSidebarClasses = `position-fixed top-0 start-0 shadow-lg ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`;
+  // const mobileSidebarClasses = `position-fixed top-0 start-0 shadow-lg ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`;
   // Classes for desktop: static position
   const desktopSidebarClasses = "position-md-static";
   // Transition class
-  const transitionClasses = "transition-transform duration-300 ease-in-out";
+  // const transitionClasses = "transition-transform duration-300 ease-in-out";
   
   // Custom style for transform needed because Bootstrap 5 doesn't have -translate-x-full utility
-  const mobileTransformStyle = !isSidebarOpen ? { transform: 'translateX(-100%)' } : {transform: 'translateX(0)'};
+  // const mobileTransformStyle = !isSidebarOpen ? { transform: 'translateX(-100%)' } : {transform: 'translateX(0)'};
 
 
   return (
     <div
-      className={`${sidebarBaseClasses} ${desktopSidebarClasses} ${isSidebarOpen ? '' : 'd-none'} d-md-flex`} // d-md-flex ensures it's part of flex on desktop
-      style={{ width: '280px', zIndex: 1045, ...mobileTransformStyle }} // zIndex to be above content if overlaying
-      // For mobile, we'll use a different approach for visibility via App.tsx state
+      className={`${sidebarBaseClasses} ${desktopSidebarClasses} ${isSidebarOpen ? '' : 'd-none d-md-flex'}`} 
+      style={{ 
+        width: '280px', 
+        zIndex: 1045, 
+        transition: 'transform 0.3s ease-in-out', // Added transition directly
+        transform: isSidebarOpen || window.innerWidth >= 768 ? 'translateX(0)' : 'translateX(-100%)', // Control transform
+        position: window.innerWidth < 768 ? 'fixed' : 'static' // Conditional position
+      }}
     >
       <div className="d-flex justify-content-between align-items-center mb-3">
         <a href="/" className="d-flex align-items-center text-white text-decoration-none">
           <span className="fs-5">Synapse</span>
         </a>
         <button className="btn btn-sm btn-outline-light d-md-none" onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar">
-          {/* Close Icon (X) */}
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-x-lg" viewBox="0 0 16 16">
             <path d="M2.146 2.854a.5.5 0 0 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
           </svg>
@@ -89,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           </motion.button>
         </li>
         
-        <div className="mt-2 flex-grow-1 overflow-auto pe-2" style={{maxHeight: 'calc(100vh - 280px)'}}> {/* Adjusted maxHeight */}
+        <div className="mt-2 flex-grow-1 overflow-auto pe-2" style={{maxHeight: 'calc(100vh - 280px)'}}>
           {sessionList.length > 0 && <li className="nav-item small text-muted mb-1 ps-2">History</li>}
           {sessionList.map((session) => (
             <li key={session.id} className="nav-item d-flex justify-content-between align-items-center">
