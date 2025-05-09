@@ -24,13 +24,12 @@ const Sidebar: React.FC<SidebarProps> = ({
   onLoadSession,
   onDeleteSession,
   currentSessionId,
-  isSidebarOpen,
+  // isSidebarOpen, // This prop is passed from App.tsx but not directly used here for class logic
   setIsSidebarOpen,
 }) => {
-  // const [showConfirmDelete, setShowConfirmDelete] = useState<string | null>(null); // This line was causing the error as it's unused
 
   const handleSidebarItemClick = () => {
-    if (window.innerWidth < 768) { // md breakpoint
+    if (window.innerWidth < 768) { // md breakpoint in Bootstrap
       setIsSidebarOpen(false);
     }
   };
@@ -38,38 +37,24 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleDeleteClick = (sessionId: string, sessionTitle: string) => {
     if (window.confirm(`Are you sure you want to delete session: "${sessionTitle || 'Untitled Session'}"?`)) {
       onDeleteSession(sessionId).then(() => {
-        // Optional: Add any post-delete UI updates here if needed,
-        // though App.tsx handles main state updates.
+        // Optional: Add any post-delete UI updates here if needed
       });
     }
   };
 
-  // Base classes for sidebar
-  const sidebarBaseClasses = "d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100";
-  // Classes for mobile: fixed position, off-screen by default, slide in when open
-  // const mobileSidebarClasses = `position-fixed top-0 start-0 shadow-lg ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`;
-  // Classes for desktop: static position
-  const desktopSidebarClasses = "position-md-static";
-  // Transition class
-  // const transitionClasses = "transition-transform duration-300 ease-in-out";
-  
-  // Custom style for transform needed because Bootstrap 5 doesn't have -translate-x-full utility
-  // const mobileTransformStyle = !isSidebarOpen ? { transform: 'translateX(-100%)' } : {transform: 'translateX(0)'};
-
-
+  // Base classes for sidebar, will be part of the wrapper in App.tsx
+  // The actual sliding and responsive display is handled by the wrapper div in App.tsx
+  // and the custom CSS in index.css targeting .sidebar-container
   return (
-    // The 'sidebar-container' class will be targeted by global CSS for mobile sliding
-    // d-md-flex makes it visible and flex on medium screens and up
-    // On smaller screens, its visibility is controlled by the 'open' class added by App.tsx
     <div
-      className={`sidebar-actual ${sidebarBaseClasses} d-md-flex`} 
-      // The 'sidebar-container' class in App.tsx will handle the sliding for mobile
-      style={{ width: '280px', zIndex: 1045 }} 
+      className="d-flex flex-column flex-shrink-0 p-3 text-bg-dark vh-100" 
+      style={{ width: '100%', height: '100%' }} // Sidebar fills its container
     >
       <div className="d-flex justify-content-between align-items-center mb-3">
         <a href="/" className="d-flex align-items-center text-white text-decoration-none">
           <span className="fs-5">Synapse</span>
         </a>
+        {/* Close button for mobile, controlled by App.tsx's isSidebarOpen state via parent div */}
         <button className="btn btn-sm btn-outline-light d-md-none" onClick={() => setIsSidebarOpen(false)} aria-label="Close sidebar">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-x-lg" viewBox="0 0 16 16">
             <path d="M2.146 2.854a.5.5 0 0 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
@@ -121,9 +106,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       </ul>
       <div className="pt-2 border-top border-secondary"> 
         <p className="small text-muted text-center mb-1">Developed by Sameer Imtiaz</p>
-        
-        {/* User Info and Logout Section */}
-        {/* Desktop: Dropdown */}
         <div className="dropdown d-none d-md-block">
           <a href="#" className="d-flex align-items-center text-white text-decoration-none dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
             <strong className="text-truncate" style={{maxWidth: '180px'}}>{userEmail}</strong>
@@ -136,8 +118,6 @@ const Sidebar: React.FC<SidebarProps> = ({
             </li>
           </ul>
         </div>
-
-        {/* Mobile: Direct Info and Logout Button */}
         <div className="d-md-none mt-2">
           <div className="text-white text-truncate mb-1 small" title={userEmail}>
             {userEmail}
